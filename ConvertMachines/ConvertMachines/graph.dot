@@ -1,0 +1,17 @@
+digraph G {
+0 [label=q0y1];
+1 [label=q1y1];
+2 [label=q2y2];
+3 [label=q3y2];
+4 [label=q4y3];
+0->3  [label=x1];
+0->1  [label=x2];
+1->0  [label=x1];
+1->4  [label=x2];
+2->0  [label=x1];
+2->4  [label=x2];
+3->2  [label=x1];
+3->0  [label=x2];
+4->2  [label=x1];
+4->0  [label=x2];
+}

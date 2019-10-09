@@ -31,5 +31,10 @@
     <Text Include="inputMealy.txt" />
     <Text Include="inputMoore.txt" />
     <Text Include="output.txt" />
+    <Text Include="inputMealy1.txt" />
+    <Text Include="inputMoore1.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="graph.dot" />
   </ItemGroup>
 </Project>
