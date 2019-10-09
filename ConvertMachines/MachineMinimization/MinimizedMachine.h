@@ -8,4 +8,5 @@ struct MinimizedMachine
 	std::vector<int> equivalenceClasses;
 };
 
-void SetSizeToMinimized(MinimizedMachine &minimizedMachine, size_t inputCharactersCount, size_t positionsCount);
+void SetSizeToMinimized(MinimizedMachine &minimizedMachine, size_t inputCharactersCount, size_t verticesCount);
+size_t DoMinimizationStep(MinimizedMachine &minimizedMachine);

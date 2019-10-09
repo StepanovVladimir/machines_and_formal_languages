@@ -6,12 +6,13 @@
 
 struct TransitionMealy
 {
-	int position;
+	int vertex;
 	std::string output;
 };
 
 using MealyMachine = std::vector<std::vector<TransitionMealy>>;
 
-MealyMachine ReadMealyMachine(std::istream &strm, size_t inputCharactersCount, size_t positionsCount);
+MealyMachine ReadMealyMachine(std::istream &strm, size_t inputCharactersCount, size_t verticesCount);
 void PrintMealyMachine(const MealyMachine &mealyMachine, const std::string &fileName = "output.txt");
 MealyMachine MinimizeMealyMachine(const MealyMachine &mealyMachine);
+void CreateMealyGraph(const MealyMachine &mealyMachine);

@@ -1,24 +1,25 @@
 #include "pch.h"
 #include "MooreMachine.h"
 #include "MinimizedMachine.h"
+#include "Graph.h"
 #include <set>
 
 using namespace std;
 
-void SetSizeToMoore(MooreMachine &mooreMachine, size_t inputCharactersCount, size_t positionsCount)
+void SetSizeToMoore(MooreMachine &mooreMachine, size_t inputCharactersCount, size_t verticesCount)
 {
-	mooreMachine.outputs.resize(positionsCount);
+	mooreMachine.outputs.resize(verticesCount);
 	mooreMachine.graph.resize(inputCharactersCount);
 	for (size_t i = 0; i < mooreMachine.graph.size(); i++)
 	{
-		mooreMachine.graph[i].resize(positionsCount);
+		mooreMachine.graph[i].resize(verticesCount);
 	}
 }
 
-MooreMachine ReadMooreMachine(istream &strm, size_t inputCharactersCount, size_t positionsCount)
+MooreMachine ReadMooreMachine(istream &strm, size_t inputCharactersCount, size_t verticesCount)
 {
 	MooreMachine mooreMachine;
-	SetSizeToMoore(mooreMachine, inputCharactersCount, positionsCount);
+	SetSizeToMoore(mooreMachine, inputCharactersCount, verticesCount);
 
 	for (size_t i = 0; i < mooreMachine.outputs.size(); i++)
 	{
@@ -31,9 +32,9 @@ MooreMachine ReadMooreMachine(istream &strm, size_t inputCharactersCount, size_t
 		{
 			string transition;
 			strm >> transition;
-			string positionNumber;
-			positionNumber.append(transition, 1);
-			mooreMachine.graph[i][j] = stoi(positionNumber);
+			string vertexNumber;
+			vertexNumber.append(transition, 1);
+			mooreMachine.graph[i][j] = stoi(vertexNumber);
 		}
 	}
 
@@ -59,7 +60,34 @@ void PrintMooreMachine(const MooreMachine &mooreMachine, const string &fileName)
 	}
 }
 
-/*MooreMachine RemoveUnreachablePositions(const MooreMachine &mooreMachine)
+void CreateMooreGraph(const MooreMachine &mooreMachine)
+{
+	Graph graph;
+	vector<Graph::vertex_descriptor> vertices;
+	for (size_t i = 0; i < mooreMachine.graph[0].size(); ++i)
+	{
+		string vertexLabel = 'q' + to_string(i) + mooreMachine.outputs[i];
+		vertices.push_back(boost::add_vertex({ vertexLabel }, graph));
+	}
+
+	for (size_t i = 0; i < mooreMachine.graph.size(); ++i)
+	{
+		for (size_t j = 0; j < mooreMachine.graph[0].size(); ++j)
+		{
+			string edgeLabel = 'x' + to_string(i + 1);
+			boost::add_edge(vertices[j], vertices[mooreMachine.graph[i][j]], { edgeLabel }, graph);
+		}
+	}
+
+	boost::dynamic_properties dp;
+	dp.property("label", boost::get(&VertexProps::label, graph));
+	dp.property("label", boost::get(&EdgeProps::label, graph));
+	dp.property("node_id", boost::get(boost::vertex_index, graph));
+	ofstream ofs("graph.dot");
+	boost::write_graphviz_dp(ofs, graph, dp);
+}
+
+/*MooreMachine RemoveUnreachableVertices(const MooreMachine &mooreMachine)
 {
 	set<int> unreachableVertices;
 	for (size_t i = 1; i < mooreMachine.graph[0].size(); i++)
@@ -139,44 +167,17 @@ size_t FindEquivalenceClasses(MinimizedMachine &minimizedMachine,
 {
 	while (true)
 	{
-		vector<int> transitions;
-		vector<pair<int, vector<int>>> equivalenceClasses;
-		for (size_t i = 0; i < minimizedMachine.graph[0].size(); i++)
+		size_t newEquivalenceClassesCount = DoMinimizationStep(minimizedMachine);
+
+		if (equivalenceClassesCount < newEquivalenceClassesCount)
 		{
-			for (size_t j = 0; j < minimizedMachine.graph.size(); j++)
-			{
-				transitions.push_back(minimizedMachine.graph[j][i]);
-			}
-
-			bool found = false;
-			for (size_t j = 0; j < equivalenceClasses.size(); j++)
-			{
-				if (equivalenceClasses[j] == pair<int, vector<int>>{ minimizedMachine.equivalenceClasses[i], transitions })
-				{
-					minimizedMachine.equivalenceClasses[i] = j;
-					found = true;
-					break;
-				}
-			}
-
-			if (!found)
-			{
-				equivalenceClasses.push_back({ minimizedMachine.equivalenceClasses[i], transitions });
-				minimizedMachine.equivalenceClasses[i] = equivalenceClasses.size() - 1;
-			}
-
-			transitions = {};
-		}
-
-		if (equivalenceClassesCount < equivalenceClasses.size())
-		{
-			equivalenceClassesCount = equivalenceClasses.size();
+			equivalenceClassesCount = newEquivalenceClassesCount;
 			for (size_t i = 0; i < mooreMachine.graph.size(); i++)
 			{
 				for (size_t j = 0; j < mooreMachine.graph[0].size(); j++)
 				{
-					int nextPosition = minimizedMachine.equivalenceClasses[mooreMachine.graph[i][j]];
-					minimizedMachine.graph[i][j] = nextPosition;
+					int nextVertex = minimizedMachine.equivalenceClasses[mooreMachine.graph[i][j]];
+					minimizedMachine.graph[i][j] = nextVertex;
 				}
 			}
 		}
@@ -187,7 +188,7 @@ size_t FindEquivalenceClasses(MinimizedMachine &minimizedMachine,
 	}
 }
 
-MooreMachine FindEquivalentPositions(const MooreMachine &mooreMachine)
+MooreMachine FindEquivalentVertices(const MooreMachine &mooreMachine)
 {
 	MinimizedMachine minimizedMachine;
 	SetSizeToMinimized(minimizedMachine, mooreMachine.graph.size(), mooreMachine.graph[0].size());
@@ -216,6 +217,6 @@ MooreMachine FindEquivalentPositions(const MooreMachine &mooreMachine)
 
 MooreMachine MinimizeMooreMachine(const MooreMachine &mooreMachine)
 {
-	//MooreMachine optimizedMoore = RemoveUnreachablePositions(mooreMachine);
-	return FindEquivalentPositions(mooreMachine);
+	//MooreMachine optimizedMoore = RemoveUnreachableVertices(mooreMachine);
+	return FindEquivalentVertices(mooreMachine);
 }

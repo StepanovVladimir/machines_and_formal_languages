@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <set>
-#include <map>
 #include <boost/graph/graphviz.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/iteration_macros.hpp>
@@ -24,11 +23,6 @@ struct MooreMachine
 	vector<vector<int>> graph;
 	vector<string> outputs;
 };
-
-/*using Edge = pair<int, int>;
-using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
-	boost::property<boost::vertex_color_t, boost::default_color_type>,
-	boost::property<boost::edge_weight_t, string>>;*/
 
 struct VertexProps
 {
