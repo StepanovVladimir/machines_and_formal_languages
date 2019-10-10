@@ -7,29 +7,29 @@ void SetSizeToMinimized(MinimizedMachine &minimizedMachine, size_t inputCharacte
 {
 	minimizedMachine.equivalenceClasses.resize(verticesCount);
 	minimizedMachine.graph.resize(inputCharactersCount);
-	for (size_t i = 0; i < minimizedMachine.graph.size(); i++)
+	for (size_t input = 0; input < minimizedMachine.graph.size(); input++)
 	{
-		minimizedMachine.graph[i].resize(verticesCount);
+		minimizedMachine.graph[input].resize(verticesCount);
 	}
 }
 
 size_t DoMinimizationStep(MinimizedMachine &minimizedMachine)
 {
 	vector<pair<int, vector<int>>> equivalenceClasses;
-	for (size_t i = 0; i < minimizedMachine.graph[0].size(); i++)
+	for (size_t vertex = 0; vertex < minimizedMachine.graph[0].size(); vertex++)
 	{
 		vector<int> transitions;
-		for (size_t j = 0; j < minimizedMachine.graph.size(); j++)
+		for (size_t input = 0; input < minimizedMachine.graph.size(); input++)
 		{
-			transitions.push_back(minimizedMachine.graph[j][i]);
+			transitions.push_back(minimizedMachine.graph[input][vertex]);
 		}
 
 		bool found = false;
-		for (size_t j = 0; j < equivalenceClasses.size(); j++)
+		for (size_t equivalenceClass = 0; equivalenceClass < equivalenceClasses.size(); equivalenceClass++)
 		{
-			if (equivalenceClasses[j] == pair<int, vector<int>>{ minimizedMachine.equivalenceClasses[i], transitions })
+			if (equivalenceClasses[equivalenceClass] == pair<int, vector<int>>{ minimizedMachine.equivalenceClasses[vertex], transitions })
 			{
-				minimizedMachine.equivalenceClasses[i] = j;
+				minimizedMachine.equivalenceClasses[vertex] = equivalenceClass;
 				found = true;
 				break;
 			}
@@ -37,8 +37,8 @@ size_t DoMinimizationStep(MinimizedMachine &minimizedMachine)
 
 		if (!found)
 		{
-			equivalenceClasses.push_back({ minimizedMachine.equivalenceClasses[i], transitions });
-			minimizedMachine.equivalenceClasses[i] = equivalenceClasses.size() - 1;
+			equivalenceClasses.push_back({ minimizedMachine.equivalenceClasses[vertex], transitions });
+			minimizedMachine.equivalenceClasses[vertex] = equivalenceClasses.size() - 1;
 		}
 	}
 	return equivalenceClasses.size();

@@ -9,9 +9,9 @@ using namespace std;
 void SetSizeToMealy(MealyMachine &mealyMachine, size_t inputCharactersCount, size_t verticesCount)
 {
 	mealyMachine.resize(inputCharactersCount);
-	for (size_t i = 0; i < mealyMachine.size(); i++)
+	for (size_t input = 0; input < mealyMachine.size(); input++)
 	{
-		mealyMachine[i].resize(verticesCount);
+		mealyMachine[input].resize(verticesCount);
 	}
 }
 
@@ -20,9 +20,9 @@ MealyMachine ReadMealyMachine(istream &strm, size_t inputCharactersCount, size_t
 	MealyMachine mealyMachine;
 	SetSizeToMealy(mealyMachine, inputCharactersCount, verticesCount);
 
-	for (size_t i = 0; i < mealyMachine.size(); i++)
+	for (size_t input = 0; input < mealyMachine.size(); input++)
 	{
-		for (size_t j = 0; j < mealyMachine[0].size(); j++)
+		for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 		{
 			string transition;
 			strm >> transition;
@@ -31,8 +31,8 @@ MealyMachine ReadMealyMachine(istream &strm, size_t inputCharactersCount, size_t
 			string vertexNumber;
 			vertexNumber.append(transition, 1, indexOfY - 1);
 
-			mealyMachine[i][j].vertex = stoi(vertexNumber);
-			mealyMachine[i][j].output.append(transition, indexOfY);
+			mealyMachine[input][vertex].vertex = stoi(vertexNumber);
+			mealyMachine[input][vertex].output.append(transition, indexOfY);
 		}
 	}
 
@@ -42,11 +42,11 @@ MealyMachine ReadMealyMachine(istream &strm, size_t inputCharactersCount, size_t
 void PrintMealyMachine(const MealyMachine &mealyMachine, const string &fileName)
 {
 	ofstream fOut(fileName);
-	for (size_t i = 0; i < mealyMachine.size(); i++)
+	for (size_t input = 0; input < mealyMachine.size(); input++)
 	{
-		for (size_t j = 0; j < mealyMachine[0].size(); j++)
+		for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 		{
-			fOut << 'q' << mealyMachine[i][j].vertex << mealyMachine[i][j].output << ' ';
+			fOut << 'q' << mealyMachine[input][vertex].vertex << mealyMachine[input][vertex].output << ' ';
 		}
 		fOut << endl;
 	}
@@ -56,18 +56,18 @@ void CreateMealyGraph(const MealyMachine &mealyMachine)
 {
 	Graph graph;
 	vector<Graph::vertex_descriptor> vertices;
-	for (size_t i = 0; i < mealyMachine[0].size(); i++)
+	for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 	{
-		string vertexLabel = 'q' + to_string(i);
+		string vertexLabel = 'q' + to_string(vertex);
 		vertices.push_back(boost::add_vertex({ vertexLabel }, graph));
 	}
 
-	for (size_t i = 0; i < mealyMachine.size(); i++)
+	for (size_t input = 0; input < mealyMachine.size(); input++)
 	{
-		for (size_t j = 0; j < mealyMachine[0].size(); j++)
+		for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 		{
-			string edgeLabel = 'x' + to_string(i + 1) + mealyMachine[i][j].output;
-			boost::add_edge(vertices[j], vertices[mealyMachine[i][j].vertex], { edgeLabel }, graph);
+			string edgeLabel = 'x' + to_string(input + 1) + mealyMachine[input][vertex].output;
+			boost::add_edge(vertices[vertex], vertices[mealyMachine[input][vertex].vertex], { edgeLabel }, graph);
 		}
 	}
 
@@ -82,9 +82,9 @@ void CreateMealyGraph(const MealyMachine &mealyMachine)
 void RecursiveTraversal(const MealyMachine &mealyMachine, set<int> &reachableVertices, int thisVertex)
 {
 	reachableVertices.insert(thisVertex);
-	for (size_t i = 0; i < mealyMachine.size(); i++)
+	for (size_t input = 0; input < mealyMachine.size(); input++)
 	{
-		int nextVertex = mealyMachine[i][thisVertex].vertex;
+		int nextVertex = mealyMachine[input][thisVertex].vertex;
 		auto iter = reachableVertices.find(nextVertex);
 		if (iter == reachableVertices.end())
 		{
@@ -107,9 +107,9 @@ MealyMachine RemoveUnreachableVertices(const MealyMachine &mealyMachine)
 	{
 		vector<int> reductions{ 0 };
 		int reduction = 0;
-		for (size_t i = 1; i < mealyMachine[0].size(); i++)
+		for (size_t vertex = 1; vertex < mealyMachine[0].size(); vertex++)
 		{
-			auto iter = reachableVertices.find(i);
+			auto iter = reachableVertices.find(vertex);
 			if (iter == reachableVertices.end())
 			{
 				reduction++;
@@ -120,15 +120,15 @@ MealyMachine RemoveUnreachableVertices(const MealyMachine &mealyMachine)
 		MealyMachine optimizedMealy;
 		SetSizeToMealy(optimizedMealy, mealyMachine.size(), reachableVertices.size());
 
-		for (size_t i = 0; i < mealyMachine.size(); i++)
+		for (size_t input = 0; input < mealyMachine.size(); input++)
 		{
-			size_t j = 0;
-			for (int vertex : reachableVertices)
+			size_t newVertex = 0;
+			for (int reachableVertex : reachableVertices)
 			{
-				reduction = reductions[mealyMachine[i][vertex].vertex];
-				optimizedMealy[i][j].vertex = mealyMachine[i][vertex].vertex - reduction;
-				optimizedMealy[i][j].output = mealyMachine[i][vertex].output;
-				j++;
+				reduction = reductions[mealyMachine[input][reachableVertex].vertex];
+				optimizedMealy[input][newVertex].vertex = mealyMachine[input][reachableVertex].vertex - reduction;
+				optimizedMealy[input][newVertex].output = mealyMachine[input][reachableVertex].output;
+				newVertex++;
 			}
 		}
 
@@ -139,21 +139,21 @@ MealyMachine RemoveUnreachableVertices(const MealyMachine &mealyMachine)
 size_t FindOutputEquivalenceClasses(MinimizedMachine &minimizedMachine,
 	const MealyMachine &mealyMachine)
 {
-	string outputs;
 	vector<string> equivalenceClasses;
-	for (size_t i = 0; i < mealyMachine[0].size(); i++)
+	for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 	{
-		for (size_t j = 0; j < mealyMachine.size(); j++)
+		string outputs;
+		for (size_t input = 0; input < mealyMachine.size(); input++)
 		{
-			outputs += mealyMachine[j][i].output;
+			outputs += mealyMachine[input][vertex].output;
 		}
 
 		bool found = false;
-		for (size_t j = 0; j < equivalenceClasses.size(); j++)
+		for (size_t equivalenceClass = 0; equivalenceClass < equivalenceClasses.size(); equivalenceClass++)
 		{
-			if (equivalenceClasses[j] == outputs)
+			if (equivalenceClasses[equivalenceClass] == outputs)
 			{
-				minimizedMachine.equivalenceClasses[i] = j;
+				minimizedMachine.equivalenceClasses[vertex] = equivalenceClass;
 				found = true;
 				break;
 			}
@@ -162,17 +162,15 @@ size_t FindOutputEquivalenceClasses(MinimizedMachine &minimizedMachine,
 		if (!found)
 		{
 			equivalenceClasses.push_back(outputs);
-			minimizedMachine.equivalenceClasses[i] = equivalenceClasses.size() - 1;
+			minimizedMachine.equivalenceClasses[vertex] = equivalenceClasses.size() - 1;
 		}
-
-		outputs = "";
 	}
 
-	for (size_t i = 0; i < mealyMachine.size(); i++)
+	for (size_t input = 0; input < mealyMachine.size(); input++)
 	{
-		for (size_t j = 0; j < mealyMachine[0].size(); j++)
+		for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 		{
-			minimizedMachine.graph[i][j] = minimizedMachine.equivalenceClasses[mealyMachine[i][j].vertex];
+			minimizedMachine.graph[input][vertex] = minimizedMachine.equivalenceClasses[mealyMachine[input][vertex].vertex];
 		}
 	}
 
@@ -189,12 +187,12 @@ size_t FindEquivalenceClasses(MinimizedMachine &minimizedMachine,
 		if (equivalenceClassesCount < newEquivalenceClassesCount)
 		{
 			equivalenceClassesCount = newEquivalenceClassesCount;
-			for (size_t i = 0; i < mealyMachine.size(); i++)
+			for (size_t input = 0; input < mealyMachine.size(); input++)
 			{
-				for (size_t j = 0; j < mealyMachine[0].size(); j++)
+				for (size_t vertex = 0; vertex < mealyMachine[0].size(); vertex++)
 				{
-					int nextVertex = minimizedMachine.equivalenceClasses[mealyMachine[i][j].vertex];
-					minimizedMachine.graph[i][j] = nextVertex;
+					int equivalenceClass = minimizedMachine.equivalenceClasses[mealyMachine[input][vertex].vertex];
+					minimizedMachine.graph[input][vertex] = equivalenceClass;
 				}
 			}
 		}
@@ -215,11 +213,11 @@ MealyMachine FindEquivalentVertices(const MealyMachine &mealyMachine)
 
 	MealyMachine minimizedMealyMachine;
 	SetSizeToMealy(minimizedMealyMachine, mealyMachine.size(), equivalenceClassesCount);
-	for (size_t i = 0; i < minimizedMachine.graph.size(); i++)
+	for (size_t input = 0; input < minimizedMachine.graph.size(); input++)
 	{
-		for (size_t j = 0; j < minimizedMachine.graph[0].size(); j++)
+		for (size_t vertex = 0; vertex < minimizedMachine.graph[0].size(); vertex++)
 		{
-			minimizedMealyMachine[i][minimizedMachine.equivalenceClasses[j]] = { minimizedMachine.graph[i][j], mealyMachine[i][j].output };
+			minimizedMealyMachine[input][minimizedMachine.equivalenceClasses[vertex]] = { minimizedMachine.graph[input][vertex], mealyMachine[input][vertex].output };
 		}
 	}
 

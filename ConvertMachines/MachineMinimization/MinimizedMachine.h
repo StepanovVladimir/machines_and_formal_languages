@@ -2,10 +2,12 @@
 
 #include <vector>
 
+using EquivalenceClass = int;
+
 struct MinimizedMachine
 {
-	std::vector<std::vector<int>> graph;
-	std::vector<int> equivalenceClasses;
+	std::vector<EquivalenceClass> equivalenceClasses;
+	std::vector<std::vector<EquivalenceClass>> graph;
 };
 
 void SetSizeToMinimized(MinimizedMachine &minimizedMachine, size_t inputCharactersCount, size_t verticesCount);

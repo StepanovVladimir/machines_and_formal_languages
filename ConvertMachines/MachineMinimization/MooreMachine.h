@@ -6,8 +6,8 @@
 
 struct MooreMachine
 {
-	std::vector<std::vector<int>> graph;
 	std::vector<std::string> outputs;
+	std::vector<std::vector<int>> graph;
 };
 
 MooreMachine ReadMooreMachine(std::istream &strm, size_t inputCharactersCount, size_t verticesCount);
