@@ -1,0 +1,7 @@
+3
+2
+9
+mealy
+q3y1 q1y0 q3y1 q3y1 q0y1 q1y1 q2y1 q8y0 q7y0
+q8y0 q1y0 q1y0 q2y0 q5y1 q4y1 q4y1 q8y0 q8y0
+q0y0 q8y1 q2y0 q2y0 q6y1 q6y1 q5y1 q7y1 q1y1

@@ -66,7 +66,7 @@ void CreateMealyGraph(const MealyMachine &mealyMachine)
 	{
 		for (size_t j = 0; j < mealyMachine[0].size(); j++)
 		{
-			string edgeLabel = 'x' + std::to_string(i + 1) + mealyMachine[i][j].output;
+			string edgeLabel = 'x' + to_string(i + 1) + mealyMachine[i][j].output;
 			boost::add_edge(vertices[j], vertices[mealyMachine[i][j].vertex], { edgeLabel }, graph);
 		}
 	}
@@ -79,38 +79,62 @@ void CreateMealyGraph(const MealyMachine &mealyMachine)
 	boost::write_graphviz_dp(ofs, graph, dp);
 }
 
-/*MealyMachine RemoveUnreachableVertices(const MealyMachine &mealyMachine)
+void RecursiveTraversal(const MealyMachine &mealyMachine, set<int> &reachableVertices, int thisVertex)
 {
-	set<int> unreachableVertices;
-	for (size_t i = 1; i < mealyMachine[0].size(); i++)
-	{
-		unreachableVertices.insert(i);
-	}
-
+	reachableVertices.insert(thisVertex);
 	for (size_t i = 0; i < mealyMachine.size(); i++)
 	{
-		for (size_t j = 0; j < mealyMachine[0].size(); j++)
+		int nextVertex = mealyMachine[i][thisVertex].vertex;
+		auto iter = reachableVertices.find(nextVertex);
+		if (iter == reachableVertices.end())
 		{
-			unreachableVertices.erase(mealyMachine[i][j].vertex);
+			RecursiveTraversal(mealyMachine, reachableVertices, nextVertex);
 		}
 	}
+}
 
-	if (unreachableVertices.empty())
+MealyMachine RemoveUnreachableVertices(const MealyMachine &mealyMachine)
+{
+	set<int> reachableVertices;
+
+	RecursiveTraversal(mealyMachine, reachableVertices, 0);
+
+	if (reachableVertices.size() == mealyMachine[0].size())
 	{
 		return mealyMachine;
 	}
-
-	MealyMachine optimizedMealy = mealyMachine;
-	for (size_t i = 0; i < optimizedMealy.size(); i++)
+	else
 	{
-		for (int unreachableVertice : unreachableVertices)
+		vector<int> reductions{ 0 };
+		int reduction = 0;
+		for (size_t i = 1; i < mealyMachine[0].size(); i++)
 		{
-			optimizedMealy[i].erase(optimizedMealy[i].begin() + unreachableVertice);
+			auto iter = reachableVertices.find(i);
+			if (iter == reachableVertices.end())
+			{
+				reduction++;
+			}
+			reductions.push_back(reduction);
 		}
-	}
 
-	return optimizedMealy;
-}*/
+		MealyMachine optimizedMealy;
+		SetSizeToMealy(optimizedMealy, mealyMachine.size(), reachableVertices.size());
+
+		for (size_t i = 0; i < mealyMachine.size(); i++)
+		{
+			size_t j = 0;
+			for (int vertex : reachableVertices)
+			{
+				reduction = reductions[mealyMachine[i][vertex].vertex];
+				optimizedMealy[i][j].vertex = mealyMachine[i][vertex].vertex - reduction;
+				optimizedMealy[i][j].output = mealyMachine[i][vertex].output;
+				j++;
+			}
+		}
+
+		return optimizedMealy;
+	}
+}
 
 size_t FindOutputEquivalenceClasses(MinimizedMachine &minimizedMachine,
 	const MealyMachine &mealyMachine)
@@ -204,6 +228,6 @@ MealyMachine FindEquivalentVertices(const MealyMachine &mealyMachine)
 
 MealyMachine MinimizeMealyMachine(const MealyMachine &mealyMachine)
 {
-	//MealyMachine optimizedMealy = RemoveUnreachableVertices(mealyMachine);
-	return FindEquivalentVertices(mealyMachine);
+	MealyMachine optimizedMealy = RemoveUnreachableVertices(mealyMachine);
+	return FindEquivalentVertices(optimizedMealy);
 }

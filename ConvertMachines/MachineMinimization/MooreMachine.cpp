@@ -87,44 +87,68 @@ void CreateMooreGraph(const MooreMachine &mooreMachine)
 	boost::write_graphviz_dp(ofs, graph, dp);
 }
 
-/*MooreMachine RemoveUnreachableVertices(const MooreMachine &mooreMachine)
+void RecursiveTraversal(const MooreMachine &mooreMachine, set<int> &reachableVertices, int thisVertex)
 {
-	set<int> unreachableVertices;
-	for (size_t i = 1; i < mooreMachine.graph[0].size(); i++)
-	{
-		unreachableVertices.insert(i);
-	}
-
+	reachableVertices.insert(thisVertex);
 	for (size_t i = 0; i < mooreMachine.graph.size(); i++)
 	{
-		for (size_t j = 0; j < mooreMachine.graph[0].size(); j++)
+		int nextVertex = mooreMachine.graph[i][thisVertex];
+		auto iter = reachableVertices.find(nextVertex);
+		if (iter == reachableVertices.end())
 		{
-			unreachableVertices.erase(mooreMachine.graph[i][j]);
+			RecursiveTraversal(mooreMachine, reachableVertices, nextVertex);
 		}
 	}
+}
 
-	if (unreachableVertices.empty())
+MooreMachine RemoveUnreachableVertices(const MooreMachine &mooreMachine)
+{
+	set<int> reachableVertices;
+
+	RecursiveTraversal(mooreMachine, reachableVertices, 0);
+
+	if (reachableVertices.size() == mooreMachine.graph[0].size())
 	{
 		return mooreMachine;
 	}
-
-	MooreMachine optimizedMoore = mooreMachine;
-
-	for (int unreachableVertice : unreachableVertices)
+	else
 	{
-		optimizedMoore.outputs.erase(optimizedMoore.outputs.begin() + unreachableVertice);
-	}
-
-	for (size_t i = 0; i < optimizedMoore.graph.size(); i++)
-	{
-		for (int unreachableVertice : unreachableVertices)
+		vector<int> reductions{ 0 };
+		int reduction = 0;
+		for (size_t i = 1; i < mooreMachine.graph[0].size(); i++)
 		{
-			optimizedMoore.graph[i].erase(optimizedMoore.graph[i].begin() + unreachableVertice);
+			auto iter = reachableVertices.find(i);
+			if (iter == reachableVertices.end())
+			{
+				reduction++;
+			}
+			reductions.push_back(reduction);
 		}
-	}
 
-	return optimizedMoore;
-}*/
+		MooreMachine optimizedMoore;
+		SetSizeToMoore(optimizedMoore, mooreMachine.graph.size(), reachableVertices.size());
+
+		size_t i = 0;
+		for (int vertex : reachableVertices)
+		{
+			optimizedMoore.outputs[i] = mooreMachine.outputs[vertex];
+			i++;
+		}
+
+		for (size_t i = 0; i < mooreMachine.graph.size(); i++)
+		{
+			size_t j = 0;
+			for (int vertex : reachableVertices)
+			{
+				reduction = reductions[mooreMachine.graph[i][vertex]];
+				optimizedMoore.graph[i][j] = mooreMachine.graph[i][vertex] - reduction;
+				j++;
+			}
+		}
+
+		return optimizedMoore;
+	}
+}
 
 size_t FindOutputEquivalenceClasses(MinimizedMachine &minimizedMachine,
 	const MooreMachine &mooreMachine)
@@ -217,6 +241,6 @@ MooreMachine FindEquivalentVertices(const MooreMachine &mooreMachine)
 
 MooreMachine MinimizeMooreMachine(const MooreMachine &mooreMachine)
 {
-	//MooreMachine optimizedMoore = RemoveUnreachableVertices(mooreMachine);
-	return FindEquivalentVertices(mooreMachine);
+	MooreMachine optimizedMoore = RemoveUnreachableVertices(mooreMachine);
+	return FindEquivalentVertices(optimizedMoore);
 }

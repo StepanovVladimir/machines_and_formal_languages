@@ -183,7 +183,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="inputMealy.txt" />
+    <Text Include="inputMealy1.txt" />
     <Text Include="inputMoore.txt" />
+    <Text Include="inputMoore1.txt" />
     <Text Include="output.txt" />
   </ItemGroup>
   <ItemGroup>
