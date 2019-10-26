@@ -1,3 +1,3 @@
-q0y1 q0y1 q1y2 
-q2y1 q2y1 q0y1 
-q0y1 q1y2 q2y1 
+y0 y0 y0 y1 y0 
+q3 q0 q4 q4 q0 
+q1 q3 q2 q2 q3 
