@@ -47,6 +47,12 @@ NondetMachine ReadNondetMachine(istream& strm, size_t inputCharactersCount, size
 		{
 			string str;
 			strm >> str;
+
+			if (str == "-")
+			{
+				continue;
+			}
+
 			size_t index = 1;
 			while (index < str.size())
 			{
@@ -97,6 +103,12 @@ DetMachine DetermineMachine(const NondetMachine& nondetMachine)
 				allNondetTransitions = SetUnion(allNondetTransitions, nondetMachine[input][ver]);
 			}
 
+			if (allNondetTransitions.empty())
+			{
+				detMachine[input][vertex] = -1;
+				continue;
+			}
+
 			auto iter = detTransitions.find(allNondetTransitions);
 			if (iter != detTransitions.end())
 			{
@@ -124,7 +136,14 @@ void PrintDetMachine(const DetMachine& machine, const string& fileName)
 	{
 		for (size_t vertex = 0; vertex < machine[0].size(); vertex++)
 		{
-			fOut << 's' << machine[input][vertex] << ' ';
+			if (machine[input][vertex] == -1)
+			{
+				fOut << "- ";
+			}
+			else
+			{
+				fOut << 's' << machine[input][vertex] << ' ';
+			}
 		}
 		fOut << endl;
 	}
@@ -134,18 +153,21 @@ void CreateGraph(const DetMachine& machine)
 {
 	Graph graph;
 	vector<Graph::vertex_descriptor> vertices;
-	for (size_t i = 0; i < machine[0].size(); ++i)
+	for (size_t vertex = 0; vertex < machine[0].size(); ++vertex)
 	{
-		string vertexLabel = 's' + to_string(i);
+		string vertexLabel = 's' + to_string(vertex);
 		vertices.push_back(boost::add_vertex({ vertexLabel }, graph));
 	}
 
-	for (size_t i = 0; i < machine.size(); ++i)
+	for (size_t input = 0; input < machine.size(); ++input)
 	{
-		for (size_t j = 0; j < machine[0].size(); ++j)
+		for (size_t vertex = 0; vertex < machine[0].size(); ++vertex)
 		{
-			string edgeLabel = 'x' + to_string(i + 1);
-			boost::add_edge(vertices[j], vertices[machine[i][j]], { edgeLabel }, graph);
+			if (machine[input][vertex] != -1)
+			{
+				string edgeLabel = 'x' + to_string(input + 1);
+				boost::add_edge(vertices[vertex], vertices[machine[input][vertex]], { edgeLabel }, graph);
+			}
 		}
 	}
 
