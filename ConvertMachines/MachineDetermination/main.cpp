@@ -58,8 +58,12 @@ void SetSizeToDet(DetMachine& machine, size_t inputCharactersCount, size_t verti
 	}
 }
 
-NondetMachine ReadNondetMachine(istream& strm, size_t inputCharactersCount, size_t verticesCount)
+NondetMachine ReadNondetMachine(const string& fileName)
 {
+	ifstream fIn(fileName);
+	size_t inputCharactersCount;
+	size_t verticesCount;
+	fIn >> inputCharactersCount >> verticesCount;
 	NondetMachine machine;
 	SetSizeToNondet(machine, inputCharactersCount, verticesCount);
 	for (size_t input = 0; input < machine.size(); ++input)
@@ -67,7 +71,7 @@ NondetMachine ReadNondetMachine(istream& strm, size_t inputCharactersCount, size
 		for (size_t vertex = 0; vertex < machine[0].size(); ++vertex)
 		{
 			string str;
-			strm >> str;
+			fIn >> str;
 
 			if (str == "-")
 			{
@@ -225,11 +229,7 @@ void CreateGraph(const DetMachine& machine)
 
 int main(int argc, char* argv[])
 {
-	ifstream fIn(argv[1]);
-	size_t inputCharactersCount;
-	size_t verticesCount;
-	fIn >> inputCharactersCount >> verticesCount;
-	NondetMachine nondetMachine = ReadNondetMachine(fIn, inputCharactersCount, verticesCount);
+	NondetMachine nondetMachine = ReadNondetMachine(argv[1]);
 	DetMachine detMachine = DetermineMachine(nondetMachine);
 	PrintDetMachine(detMachine, argv[2]);
 	CreateGraph(detMachine);
