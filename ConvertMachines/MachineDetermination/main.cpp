@@ -13,7 +13,19 @@
 using namespace std;
 
 using NondetMachine = vector<vector<set<int>>>;
-using DetMachine = vector<vector<int>>;
+
+enum struct VertexType
+{
+	Starting = 'S',
+	Normal = 'N',
+	Finishing = 'F'
+};
+
+struct DetMachine
+{
+	vector<VertexType> types;
+	vector<vector<int>> graph;
+};
 
 struct VertexProps
 {
@@ -27,20 +39,29 @@ struct EdgeProps
 
 using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, VertexProps, EdgeProps>;
 
-template<typename Matrix>
-void SetSizeToMatrix(Matrix& matrix, size_t size1, size_t size2)
+void SetSizeToNondet(NondetMachine& machine, size_t inputCharactersCount, size_t verticesCount)
 {
-	matrix.resize(size1);
-	for (size_t i = 0; i < matrix.size(); ++i)
+	machine.resize(inputCharactersCount);
+	for (size_t input = 0; input < machine.size(); ++input)
 	{
-		matrix[i].resize(size2);
+		machine[input].resize(verticesCount);
+	}
+}
+
+void SetSizeToDet(DetMachine& machine, size_t inputCharactersCount, size_t verticesCount)
+{
+	machine.types.resize(verticesCount);
+	machine.graph.resize(inputCharactersCount);
+	for (size_t input = 0; input < machine.graph.size(); ++input)
+	{
+		machine.graph[input].resize(verticesCount);
 	}
 }
 
 NondetMachine ReadNondetMachine(istream& strm, size_t inputCharactersCount, size_t verticesCount)
 {
 	NondetMachine machine;
-	SetSizeToMatrix(machine, inputCharactersCount, verticesCount);
+	SetSizeToNondet(machine, inputCharactersCount, verticesCount);
 	for (size_t input = 0; input < machine.size(); ++input)
 	{
 		for (size_t vertex = 0; vertex < machine[0].size(); ++vertex)
@@ -85,16 +106,18 @@ set<int> SetUnion(set<int> set1, set<int> set2)
 DetMachine DetermineMachine(const NondetMachine& nondetMachine)
 {
 	DetMachine detMachine;
-	SetSizeToMatrix(detMachine, nondetMachine.size(), 1);
+	SetSizeToDet(detMachine, nondetMachine.size(), 1);
+	detMachine.types[0] = VertexType::Starting;
 
 	map<int, set<int>> nondetTransitions;
 	map<set<int>, int> detTransitions;
 	nondetTransitions.emplace(0, set<int>{ 0 });
 	detTransitions.emplace(set<int>{ 0 }, 0);
 
-	for (size_t vertex = 0; vertex < detMachine[0].size(); ++vertex)
+	int finishingVertex = nondetMachine[0].size() - 1;
+	for (size_t vertex = 0; vertex < detMachine.graph[0].size(); ++vertex)
 	{
-		for (size_t input = 0; input < detMachine.size(); ++input)
+		for (size_t input = 0; input < detMachine.graph.size(); ++input)
 		{
 			set<int> allNondetTransitions;
 			set<int> nondetTransition = nondetTransitions[vertex];
@@ -105,23 +128,33 @@ DetMachine DetermineMachine(const NondetMachine& nondetMachine)
 
 			if (allNondetTransitions.empty())
 			{
-				detMachine[input][vertex] = -1;
+				detMachine.graph[input][vertex] = -1;
 				continue;
 			}
 
 			auto iter = detTransitions.find(allNondetTransitions);
 			if (iter != detTransitions.end())
 			{
-				detMachine[input][vertex] = iter->second;
+				detMachine.graph[input][vertex] = iter->second;
 			}
 			else
 			{
-				detMachine[input][vertex] = detMachine[0].size();
+				SetSizeToDet(detMachine, detMachine.graph.size(), detMachine.graph[0].size() + 1);
 
-				nondetTransitions.emplace(detMachine[0].size(), allNondetTransitions);
-				detTransitions.emplace(allNondetTransitions, detMachine[0].size());
+				detMachine.graph[input][vertex] = detMachine.graph[0].size() - 1;
 
-				SetSizeToMatrix(detMachine, detMachine.size(), detMachine[0].size() + 1);
+				nondetTransitions.emplace(detMachine.graph[0].size() - 1, allNondetTransitions);
+				detTransitions.emplace(allNondetTransitions, detMachine.graph[0].size() - 1);
+				
+				auto iter = allNondetTransitions.find(finishingVertex);
+				if (iter == allNondetTransitions.end())
+				{
+					detMachine.types[detMachine.graph[0].size() - 1] = VertexType::Normal;
+				}
+				else
+				{
+					detMachine.types[detMachine.graph[0].size() - 1] = VertexType::Finishing;
+				}
 			}
 		}
 	}
@@ -132,17 +165,23 @@ DetMachine DetermineMachine(const NondetMachine& nondetMachine)
 void PrintDetMachine(const DetMachine& machine, const string& fileName)
 {
 	ofstream fOut(fileName);
-	for (size_t input = 0; input < machine.size(); input++)
+	
+	for (size_t vertex = 0; vertex < machine.types.size(); ++vertex)
 	{
-		for (size_t vertex = 0; vertex < machine[0].size(); vertex++)
+		fOut << (char)machine.types[vertex] << ' ';
+	}
+	fOut << endl;
+	for (size_t input = 0; input < machine.graph.size(); ++input)
+	{
+		for (size_t vertex = 0; vertex < machine.graph[0].size(); ++vertex)
 		{
-			if (machine[input][vertex] == -1)
+			if (machine.graph[input][vertex] == -1)
 			{
 				fOut << "- ";
 			}
 			else
 			{
-				fOut << 's' << machine[input][vertex] << ' ';
+				fOut << 's' << machine.graph[input][vertex] << ' ';
 			}
 		}
 		fOut << endl;
@@ -153,20 +192,25 @@ void CreateGraph(const DetMachine& machine)
 {
 	Graph graph;
 	vector<Graph::vertex_descriptor> vertices;
-	for (size_t vertex = 0; vertex < machine[0].size(); ++vertex)
+	for (size_t vertex = 0; vertex < machine.graph[0].size(); ++vertex)
 	{
-		string vertexLabel = 's' + to_string(vertex);
+		string vertexLabel;
+		if (machine.types[vertex] != VertexType::Normal)
+		{
+			vertexLabel = (char)machine.types[vertex];
+		}
+		vertexLabel += "s" + to_string(vertex);
 		vertices.push_back(boost::add_vertex({ vertexLabel }, graph));
 	}
 
-	for (size_t input = 0; input < machine.size(); ++input)
+	for (size_t input = 0; input < machine.graph.size(); ++input)
 	{
-		for (size_t vertex = 0; vertex < machine[0].size(); ++vertex)
+		for (size_t vertex = 0; vertex < machine.graph[0].size(); ++vertex)
 		{
-			if (machine[input][vertex] != -1)
+			if (machine.graph[input][vertex] != -1)
 			{
 				string edgeLabel = 'x' + to_string(input + 1);
-				boost::add_edge(vertices[vertex], vertices[machine[input][vertex]], { edgeLabel }, graph);
+				boost::add_edge(vertices[vertex], vertices[machine.graph[input][vertex]], { edgeLabel }, graph);
 			}
 		}
 	}
