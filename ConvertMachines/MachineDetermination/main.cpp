@@ -100,7 +100,7 @@ NondetMachine ReadNondetMachine(const string& fileName)
 	return machine;
 }
 
-set<int> SetUnion(set<int> set1, set<int> set2)
+set<int> SetUnion(const set<int>& set1, const set<int>& set2)
 {
 	set<int> newSet;
 	set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(newSet, newSet.begin()));
