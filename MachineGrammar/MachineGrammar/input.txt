@@ -1,11 +1,10 @@
 right
-3 3 7
-a b #
-S A B
-S aA
-S aB
-S bA
-A bS
-B aS
-B bB
-B #
+3 3 6
+0 1 #
+S B C
+S 0S
+S 0B
+B 1B
+B 1C
+C 1C
+C #

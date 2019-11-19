@@ -1,0 +1,13 @@
+left
+3 4 9
+0 1 #
+S A B C
+S B#
+A B1
+A 0
+B A1
+B C1
+B B0
+B 1
+C A0
+C B1

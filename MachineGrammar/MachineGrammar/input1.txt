@@ -1,0 +1,10 @@
+right
+3 4 6
+a d #
+S B C D
+S aB
+B aC
+B aD
+B dB
+C aB
+D #

@@ -1,0 +1,11 @@
+right
+3 3 7
+0 1 #
+S A B
+S 0A
+S 1S
+A 0A
+A 1B
+B 0B
+B 1B
+B #

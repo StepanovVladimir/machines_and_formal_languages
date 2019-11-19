@@ -1,0 +1,8 @@
+left
+2 2 4
+0 1
+S A
+S A0
+A A0
+A S1
+A 0
